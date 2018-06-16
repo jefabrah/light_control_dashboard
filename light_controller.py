@@ -2,8 +2,6 @@ import tkinter as tk
 
 from phue import Bridge
 
-from throttle import throttle
-
 
 class LightController:
 
@@ -41,14 +39,6 @@ class LightController:
                 return False
         return True
 
-    def sync_lights(self):
+    def sync(self):
         self._lights_on = self.are_all_lights_on()
 
-    @throttle(seconds=3)
-    def toggle_all_lights(self, window):
-        on = not self.are_all_lights_on()
-        self.set_all_lights_on(on)
-        button_text = 'OFF' if on else 'ON'
-        window._power_button['text'] = button_text
-        window._lights.sync_lights()
-        window.sync_window()
