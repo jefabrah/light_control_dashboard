@@ -1,6 +1,8 @@
-from phue import Bridge
 import tkinter as tk
-from debounce import  debounce
+
+from phue import Bridge
+
+from throttle import throttle
 
 
 class LightController:
@@ -11,10 +13,12 @@ class LightController:
         self.bridge.connect()
         self._lights = self.bridge.get_light_objects('id')
         self.brightness = tk.IntVar
+        self._lights_on = self.are_all_lights_on()
 
     def set_all_lights_on(self, on=True):
         new_light_state = {'transitiontime': 10, 'on': on, 'bri': 254, 'sat': 0}
         self.bridge.set_light(self._lights, new_light_state)
+        self._lights_on = True
 
     def set_all_lights_brightness(self, brightness):
         bri = round(int(float(brightness)))
@@ -32,8 +36,19 @@ class LightController:
         return self._lights
 
     def are_all_lights_on(self):
-        lights_on = True
         for light in self.bridge.get_light_objects():
             if not light.on:
                 return False
-        return lights_on
+        return True
+
+    def sync_lights(self):
+        self._lights_on = self.are_all_lights_on()
+
+    @throttle(seconds=3)
+    def toggle_all_lights(self, window):
+        on = not self.are_all_lights_on()
+        self.set_all_lights_on(on)
+        button_text = 'OFF' if on else 'ON'
+        window._power_button['text'] = button_text
+        window._lights.sync_lights()
+        window.sync_window()
